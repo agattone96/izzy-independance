@@ -1,0 +1,202 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profile with role and family linkage",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["parent", "child", "caregiver"] },
+        "avatar": { "type": "string" },
+        "email": { "type": "string" },
+        "familyId": { "type": "string" },
+        "pin": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "role", "familyId"]
+    },
+    "userMapping": {
+      "title": "User Mapping",
+      "description": "Flat lookup for user family association",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "familyId": { "type": "string" },
+        "role": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "family": {
+      "title": "Family",
+      "description": "Family settings and instructions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "timezone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "tabletSettings": {
+          "type": "object",
+          "properties": {
+            "standardMinutes": { "type": "number" },
+            "maxBonusMinutes": { "type": "number" }
+          }
+        },
+        "isActiveVisit": { "type": "boolean" },
+        "parentInstructions": {
+          "type": "object",
+          "properties": {
+            "allergies": { "type": "string" },
+            "bedtime": { "type": "string" },
+            "emergencyContacts": { "type": "string" },
+            "customNotes": { "type": "string" }
+          }
+        }
+      }
+    },
+    "task": {
+      "title": "Task",
+      "description": "Chore or expectation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "key": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "pointValue": { "type": "number" },
+        "tabletBonusMinutes": { "type": "number" },
+        "dayOfWeek": { "type": "string" },
+        "isDaily": { "type": "boolean" },
+        "isRequired": { "type": "boolean" },
+        "checklistItems": { "type": "array", "items": { "type": "string" } },
+        "sortOrder": { "type": "number" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isVisitTask": { "type": "boolean" },
+        "visitTaskKey": { "type": "string" },
+        "pausedDuringVisit": { "type": "boolean" }
+      }
+    },
+    "completion": {
+      "title": "Task Completion",
+      "description": "Record of a child completing a task",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "taskId": { "type": "string" },
+        "taskKey": { "type": "string" },
+        "childId": { "type": "string" },
+        "childName": { "type": "string" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "pointsEarned": { "type": "number" },
+        "tabletBonusEarned": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending_review", "approved", "needs_fix"] },
+        "parentFeedback": { "type": "string" },
+        "checklistState": { "type": "object" }
+      }
+    },
+    "reward": {
+      "title": "Reward",
+      "description": "Reward option",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "key": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["small", "medium", "weekly", "saved_up"] },
+        "pointCost": { "type": "number" },
+        "boundary": { "type": "string" },
+        "requiresApproval": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "sortOrder": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "rewardRequest": {
+      "title": "Reward Request",
+      "description": "Redemption request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "rewardId": { "type": "string" },
+        "rewardTitle": { "type": "string" },
+        "childId": { "type": "string" },
+        "childName": { "type": "string" },
+        "pointCost": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "denied", "used"] },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "processedAt": { "type": "string", "format": "date-time" },
+        "parentFeedback": { "type": "string" }
+      }
+    },
+    "invite": {
+      "title": "Invite",
+      "description": "Joining invite link",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "familyId": { "type": "string" },
+        "role": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "log": {
+      "title": "Log",
+      "description": "System history log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "familyId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "actionType": { "type": "string" },
+        "description": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/userMapping" },
+      "description": "Flat lookup for user family association"
+    },
+    "/families/{familyId}": {
+      "schema": { "$ref": "#/entities/family" },
+      "description": "Central family document"
+    },
+    "/families/{familyId}/users/{userId}": {
+      "schema": { "$ref": "#/entities/user" },
+      "description": "Full user profile within family context"
+    },
+    "/families/{familyId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/task" },
+      "description": "Available tasks for the family"
+    },
+    "/families/{familyId}/completions/{completionId}": {
+      "schema": { "$ref": "#/entities/completion" },
+      "description": "Task completion records"
+    },
+    "/families/{familyId}/rewards/{rewardId}": {
+      "schema": { "$ref": "#/entities/reward" },
+      "description": "Available reward options"
+    },
+    "/families/{familyId}/rewardRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/rewardRequest" },
+      "description": "Reward redemption records"
+    },
+    "/families/{familyId}/logs/{logId}": {
+      "schema": { "$ref": "#/entities/log" },
+      "description": "Audit logs for the family"
+    },
+    "/invites/{inviteId}": {
+      "schema": { "$ref": "#/entities/invite" },
+      "description": "Global invite records"
+    }
+  }
+}

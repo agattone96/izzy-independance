@@ -1,0 +1,6 @@
+{
+  "name": "Independence Board",
+  "description": "A clean, modern, encouraging chore, reward, tablet-time, and boundaries system for Izzy and her family group.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

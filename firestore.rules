@@ -1,0 +1,330 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Family-based RBAC
+    function getUserRole(familyId, userId) {
+      return get(/databases/$(database)/documents/families/$(familyId)/users/$(userId)).data.role;
+    }
+
+    function isMember(familyId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid));
+    }
+
+    function isParent(familyId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && getUserRole(familyId, request.auth.uid) == 'parent';
+    }
+
+    function isChild(familyId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && getUserRole(familyId, request.auth.uid) == 'child';
+    }
+
+    function isCaregiver(familyId) {
+       return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && getUserRole(familyId, request.auth.uid) == 'caregiver';
+    }
+
+    // --- Entity Validations ---
+
+    function isValidUserMapping(data) {
+      return data.keys().hasAll(['id', 'familyId', 'role', 'name']) && 
+             data.keys().size() >= 4 && data.keys().size() <= 5 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.familyId is string && data.familyId.size() <= 128 &&
+             data.role is string && data.role.size() <= 32 &&
+             data.name is string && data.name.size() <= 128 &&
+             (!data.keys().contains('inviteId') || (data.inviteId is string && data.inviteId.size() <= 128));
+    }
+
+    function isValidFamily(data) {
+      return data.keys().hasAll(['id', 'name', 'timezone', 'createdAt', 'tabletSettings', 'isActiveVisit', 'parentInstructions']) &&
+             data.keys().size() == 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.timezone is string && data.timezone.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             data.isActiveVisit is bool;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'role', 'familyId', 'createdAt']) &&
+             data.keys().size() >= 5 && data.keys().size() <= 11 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.role in ['parent', 'child', 'caregiver'] &&
+             data.familyId is string && data.familyId.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             (!data.keys().contains('inviteId') || (data.inviteId is string && data.inviteId.size() <= 128));
+    }
+
+    function isValidTask(data) {
+      // Repaired Task schema key-size limits: Permitted size range up to 17 fields to support all domain & seed attributes
+      return data.keys().hasAll(['id', 'key', 'title', 'category', 'pointValue', 'tabletBonusMinutes', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'key', 'title', 'category', 'description', 'pointValue', 'tabletBonusMinutes', 'dayOfWeek', 'isDaily', 'isRequired', 'checklistItems', 'sortOrder', 'active', 'createdAt', 'isVisitTask', 'visitTaskKey', 'pausedDuringVisit']) &&
+             data.keys().size() >= 7 && data.keys().size() <= 17 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.key is string && data.key.size() <= 128 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.category is string && data.category.size() <= 128 &&
+             data.pointValue is number && data.tabletBonusMinutes is number &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             (!data.keys().contains('description') || (data.description is string && data.description.size() <= 1024)) &&
+             (!data.keys().contains('dayOfWeek') || (data.dayOfWeek is string && data.dayOfWeek.size() <= 32)) &&
+             (!data.keys().contains('isDaily') || data.isDaily is bool) &&
+             (!data.keys().contains('isRequired') || data.isRequired is bool) &&
+             (!data.keys().contains('checklistItems') || data.checklistItems is list) &&
+             (!data.keys().contains('sortOrder') || data.sortOrder is number) &&
+             (!data.keys().contains('active') || data.active is bool) &&
+             (!data.keys().contains('isVisitTask') || data.isVisitTask is bool) &&
+             (!data.keys().contains('visitTaskKey') || (data.visitTaskKey is string && data.visitTaskKey.size() <= 128)) &&
+             (!data.keys().contains('pausedDuringVisit') || data.pausedDuringVisit is bool);
+    }
+
+    function isValidCompletion(data) {
+      return data.keys().hasAll(['id', 'taskId', 'taskKey', 'childId', 'childName', 'completedAt', 'pointsEarned', 'tabletBonusEarned', 'status']) &&
+             data.keys().size() >= 9 && data.keys().size() <= 11 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.taskId is string && data.taskId.size() <= 128 &&
+             data.taskKey is string && data.taskKey.size() <= 128 &&
+             data.childId is string && data.childId.size() <= 128 &&
+             data.childName is string && data.childName.size() <= 128 &&
+             data.completedAt is string && data.completedAt.size() <= 64 &&
+             data.pointsEarned is number && data.tabletBonusEarned is number &&
+             data.status in ['pending_review', 'approved', 'needs_fix'];
+    }
+
+    function isValidReward(data) {
+      // Repaired Reward schema key-size limits: Permitted size range up to 10 fields to support all domain & seed attributes
+      return data.keys().hasAll(['id', 'key', 'title', 'category', 'pointCost', 'active', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'key', 'title', 'category', 'pointCost', 'active', 'createdAt', 'boundary', 'requiresApproval', 'sortOrder']) &&
+             data.keys().size() >= 7 && data.keys().size() <= 10 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.key is string && data.key.size() <= 128 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.category in ['small', 'medium', 'weekly', 'saved_up'] &&
+             data.pointCost is number &&
+             data.active is bool &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             (!data.keys().contains('boundary') || (data.boundary is string && data.boundary.size() <= 512)) &&
+             (!data.keys().contains('requiresApproval') || data.requiresApproval is bool) &&
+             (!data.keys().contains('sortOrder') || data.sortOrder is number);
+    }
+
+    function isValidRewardRequest(data) {
+       return data.keys().hasAll(['id', 'rewardId', 'rewardTitle', 'childId', 'childName', 'pointCost', 'status', 'requestedAt']) &&
+              data.keys().size() >= 8 && data.keys().size() <= 10 &&
+              data.id is string && data.id.size() <= 128 &&
+              data.rewardId is string && data.rewardId.size() <= 128 &&
+              data.rewardTitle is string && data.rewardTitle.size() <= 256 &&
+              data.childId is string && data.childId.size() <= 128 &&
+              data.childName is string && data.childName.size() <= 128 &&
+              data.pointCost is number &&
+              data.status in ['pending', 'approved', 'denied', 'used'] &&
+              data.requestedAt is string && data.requestedAt.size() <= 64;
+    }
+
+    function isValidInvite(data) {
+      return data.keys().hasAll(['id', 'familyId', 'role', 'name', 'code', 'active', 'createdAt']) &&
+             data.keys().size() >= 7 && data.keys().size() <= 9 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.familyId is string && data.familyId.size() <= 128 &&
+             data.role is string && data.role.size() <= 32 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.code is string && data.code.size() <= 32 &&
+             data.active is bool &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             (!data.keys().contains('claimedByUid') || (data.claimedByUid is string && data.claimedByUid.size() <= 128)) &&
+             (!data.keys().contains('claimedAt') || (data.claimedAt is string && data.claimedAt.size() <= 64));
+    }
+
+    function isValidLog(data) {
+       return data.keys().hasAll(['id', 'familyId', 'userId', 'userName', 'actionType', 'description', 'timestamp']) &&
+              data.keys().size() >= 7 && data.keys().size() <= 8 &&
+              data.id is string && data.id.size() <= 128 &&
+              data.familyId is string && data.familyId.size() <= 128 &&
+              data.userId is string && data.userId.size() <= 128 &&
+              data.userName is string && data.userName.size() <= 128 &&
+              data.actionType is string && data.actionType.size() <= 128 &&
+              data.description is string && data.description.size() <= 1024 &&
+              data.timestamp is string && data.timestamp.size() <= 64;
+    }
+
+    // --- Rules Implementation ---
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || (resource != null && isParent(resource.data.familyId)));
+      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid && isValidUserMapping(incoming()) && incoming().id == request.auth.uid && (
+        !incoming().keys().contains('inviteId') ||
+        (incoming().keys().contains('inviteId') && 
+         get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.claimedByUid == request.auth.uid &&
+         get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.familyId == incoming().familyId &&
+         get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.role == incoming().role &&
+         get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.active == false)
+      );
+      allow update: if isSignedIn() && isValidId(userId) && (
+        (request.auth.uid == userId && 
+         incoming().familyId == existing().familyId && 
+         incoming().role == existing().role && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['name']) &&
+         isValidUserMapping(incoming())) ||
+        (isParent(existing().familyId) && 
+         incoming().id == existing().id &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'familyId']) &&
+         isValidUserMapping(incoming()))
+      );
+    }
+
+    match /families/{familyId} {
+      allow read: if isValidId(familyId) && isMember(familyId);
+      allow create: if isSignedIn() && isValidId(familyId) && isValidFamily(incoming()) && incoming().id == familyId;
+      allow update: if isValidId(familyId) && isParent(familyId) && isValidFamily(incoming());
+
+      match /users/{memberId} {
+        allow read: if isValidId(memberId) && isMember(familyId);
+        
+        allow create: if isSignedIn() && isValidId(memberId) && isValidUser(incoming()) && (
+          // Case 1: First parent joining a brand-new family (family just created, createdAt matches user createdAt)
+          (memberId == request.auth.uid && 
+           incoming().id == request.auth.uid &&
+           incoming().role == 'parent' && 
+           get(/databases/$(database)/documents/families/$(familyId)).data.createdAt == incoming().createdAt
+          ) ||
+          // Case 2: Parent creating/adding family member
+          isParent(familyId) ||
+          // Case 3: Joined via secure invite
+          (memberId == request.auth.uid &&
+           incoming().keys().contains('inviteId') &&
+           get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.claimedByUid == request.auth.uid &&
+           get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.familyId == familyId &&
+           get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.role == incoming().role &&
+           get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.active == false)
+        );
+        
+        allow update: if isValidId(memberId) && (
+          isParent(familyId) || 
+          (isSignedIn() && memberId == request.auth.uid && 
+           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'avatar', 'pin', 'age', 'ageGroup']) &&
+           isValidUser(incoming()))
+        );
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isValidId(taskId) && isMember(familyId);
+        allow create, update: if isValidId(taskId) && isParent(familyId) && isValidTask(incoming());
+        allow delete: if isValidId(taskId) && isParent(familyId);
+      }
+
+      match /completions/{completionId} {
+        allow read: if isValidId(completionId) && isMember(familyId);
+        
+        allow create: if isValidId(completionId) && isMember(familyId) && 
+                       isValidCompletion(incoming()) && (
+                         // If written by a child, they must be the childId and points must match standard task values
+                         (isChild(familyId) && 
+                          incoming().childId == request.auth.uid && 
+                          incoming().status == 'pending_review' &&
+                          incoming().pointsEarned == get(/databases/$(database)/documents/families/$(familyId)/tasks/$(incoming().taskId)).data.pointValue &&
+                          incoming().tabletBonusEarned == get(/databases/$(database)/documents/families/$(familyId)/tasks/$(incoming().taskId)).data.tabletBonusMinutes
+                         ) ||
+                         // Parents and caregivers can also create completions (e.g. log on behalf of child)
+                         (isParent(familyId) || isCaregiver(familyId))
+                       );
+                       
+        allow update: if isValidId(completionId) && isMember(familyId) && 
+                       isValidCompletion(incoming()) && (
+                         // Parent review action
+                         isParent(familyId) ||
+                         // Child fix action
+                         (isChild(familyId) && 
+                          existing().childId == request.auth.uid &&
+                          existing().status == 'needs_fix' &&
+                          incoming().status == 'pending_review' &&
+                          incoming().parentFeedback == '' &&
+                          incoming().tabletBonusEarned == get(/databases/$(database)/documents/families/$(familyId)/tasks/$(existing().taskId)).data.tabletBonusMinutes &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'parentFeedback', 'tabletBonusEarned'])
+                         )
+                       );
+      }
+
+      match /rewards/{rewardId} {
+        allow read: if isValidId(rewardId) && isMember(familyId);
+        allow create, update: if isValidId(rewardId) && isParent(familyId) && isValidReward(incoming());
+        allow delete: if isValidId(rewardId) && isParent(familyId);
+      }
+
+      match /rewardRequests/{requestId} {
+        allow read: if isValidId(requestId) && isMember(familyId);
+        
+        allow create: if isValidId(requestId) && isMember(familyId) && 
+                       isValidRewardRequest(incoming()) && (
+                         // Child creating their own request - must verify pointCost and requireApproval status
+                         (isChild(familyId) && 
+                          incoming().childId == request.auth.uid &&
+                          incoming().pointCost == get(/databases/$(database)/documents/families/$(familyId)/rewards/$(incoming().rewardId)).data.pointCost &&
+                          (get(/databases/$(database)/documents/families/$(familyId)/rewards/$(incoming().rewardId)).data.requiresApproval == true ? incoming().status == 'pending' : incoming().status == 'used')
+                         ) ||
+                         isParent(familyId)
+                       );
+                       
+        allow update: if isValidId(requestId) && isMember(familyId) && 
+                       isValidRewardRequest(incoming()) && (
+                         isParent(familyId) || 
+                         (isChild(familyId) && 
+                          existing().childId == request.auth.uid &&
+                          existing().status == 'approved' &&
+                          incoming().status == 'used' &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status']))
+                       );
+      }
+
+      match /logs/{logId} {
+        allow read: if isValidId(logId) && isMember(familyId);
+        allow create: if isValidId(logId) && isMember(familyId) && isValidLog(incoming());
+      }
+    }
+
+    match /invites/{inviteId} {
+      // Allow single document lookup by anyone (signed-in or not) to validate invite code
+      allow get: if isValidId(inviteId);
+      
+      // Allow query listing only if user is a parent of the target family
+      allow list: if isSignedIn() && isParent(resource.data.familyId);
+      
+      // Creating an invite requires being a parent of the specified family
+      allow create: if isSignedIn() && isValidId(inviteId) && isValidInvite(incoming()) && isParent(incoming().familyId);
+      
+      // Update: Either parent can manage it, or any signed-in user can deactivate it during claiming
+      allow update: if isSignedIn() && isValidId(inviteId) && isValidInvite(incoming()) && (
+        isParent(existing().familyId) ||
+        (existing().active == true && 
+         incoming().active == false && 
+         incoming().claimedByUid == request.auth.uid &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['active', 'claimedByUid', 'claimedAt']))
+      );
+      
+      // Delete: Parent can delete invite
+      allow delete: if isSignedIn() && isValidId(inviteId) && isParent(resource.data.familyId);
+    }
+  }
+}
