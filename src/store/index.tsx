@@ -386,6 +386,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         timezone: timezone,
         createdAt: nowIso,
         isActiveVisit: false,
+        createdBy: uid,
         parentInstructions: {
           allergies: "No known food allergies. Only wholesome, high-quality ingredients.",
           bedtime: "8:30 PM",
@@ -617,6 +618,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         timezone: timezone,
         createdAt: nowIso,
         isActiveVisit: false,
+        createdBy: uid,
         parentInstructions: {
           allergies: "No known food allergies. Only wholesome, high-quality ingredients.",
           bedtime: "8:30 PM",

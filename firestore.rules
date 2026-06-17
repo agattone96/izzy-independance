@@ -54,17 +54,18 @@ service cloud.firestore {
              data.familyId is string && data.familyId.size() <= 128 &&
              data.role is string && data.role.size() <= 32 &&
              data.name is string && data.name.size() <= 128 &&
-             (!data.keys().contains('inviteId') || (data.inviteId is string && data.inviteId.size() <= 128));
+             (!data.keys().hasAny(['inviteId']) || (data.inviteId is string && data.inviteId.size() <= 128));
     }
 
     function isValidFamily(data) {
       return data.keys().hasAll(['id', 'name', 'timezone', 'createdAt', 'isActiveVisit', 'parentInstructions']) &&
-             data.keys().size() == 6 &&
+             data.keys().size() >= 6 && data.keys().size() <= 7 &&
              data.id is string && data.id.size() <= 128 &&
              data.name is string && data.name.size() <= 128 &&
              data.timezone is string && data.timezone.size() <= 128 &&
              data.createdAt is string && data.createdAt.size() <= 64 &&
-             data.isActiveVisit is bool;
+             data.isActiveVisit is bool &&
+             (!data.keys().hasAny(['createdBy']) || (data.createdBy is string && data.createdBy.size() <= 128));
     }
 
     function isValidUser(data) {
@@ -75,7 +76,12 @@ service cloud.firestore {
              data.role in ['parent', 'child', 'caregiver'] &&
              data.familyId is string && data.familyId.size() <= 128 &&
              data.createdAt is string && data.createdAt.size() <= 64 &&
-             (!data.keys().contains('inviteId') || (data.inviteId is string && data.inviteId.size() <= 128));
+             (!data.keys().hasAny(['inviteId']) || (data.inviteId is string && data.inviteId.size() <= 128)) &&
+             (!data.keys().hasAny(['avatar']) || (data.avatar is string && data.avatar.size() <= 128)) &&
+             (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 256)) &&
+             (!data.keys().hasAny(['pin']) || (data.pin is string && data.pin.size() <= 16)) &&
+             (!data.keys().hasAny(['age']) || (data.age is number && data.age >= 0 && data.age <= 120)) &&
+             (!data.keys().hasAny(['ageGroup']) || (data.ageGroup is string && data.ageGroup in ['toddler', 'preschool', 'elementary', 'teen']));
     }
 
     function isValidTask(data) {
@@ -88,16 +94,16 @@ service cloud.firestore {
              data.category is string && data.category.size() <= 128 &&
              data.pointValue is number &&
              data.createdAt is string && data.createdAt.size() <= 64 &&
-             (!data.keys().contains('description') || (data.description is string && data.description.size() <= 1024)) &&
-             (!data.keys().contains('dayOfWeek') || (data.dayOfWeek is string && data.dayOfWeek.size() <= 32)) &&
-             (!data.keys().contains('isDaily') || data.isDaily is bool) &&
-             (!data.keys().contains('isRequired') || data.isRequired is bool) &&
-             (!data.keys().contains('checklistItems') || data.checklistItems is list) &&
-             (!data.keys().contains('sortOrder') || data.sortOrder is number) &&
-             (!data.keys().contains('active') || data.active is bool) &&
-             (!data.keys().contains('isVisitTask') || data.isVisitTask is bool) &&
-             (!data.keys().contains('visitTaskKey') || (data.visitTaskKey is string && data.visitTaskKey.size() <= 128)) &&
-             (!data.keys().contains('pausedDuringVisit') || data.pausedDuringVisit is bool);
+             (!data.keys().hasAny(['description']) || (data.description is string && data.description.size() <= 1024)) &&
+             (!data.keys().hasAny(['dayOfWeek']) || (data.dayOfWeek is string && data.dayOfWeek.size() <= 32)) &&
+             (!data.keys().hasAny(['isDaily']) || data.isDaily is bool) &&
+             (!data.keys().hasAny(['isRequired']) || data.isRequired is bool) &&
+             (!data.keys().hasAny(['checklistItems']) || data.checklistItems is list) &&
+             (!data.keys().hasAny(['sortOrder']) || data.sortOrder is number) &&
+             (!data.keys().hasAny(['active']) || data.active is bool) &&
+             (!data.keys().hasAny(['isVisitTask']) || data.isVisitTask is bool) &&
+             (!data.keys().hasAny(['visitTaskKey']) || (data.visitTaskKey is string && data.visitTaskKey.size() <= 128)) &&
+             (!data.keys().hasAny(['pausedDuringVisit']) || data.pausedDuringVisit is bool);
     }
 
     function isValidCompletion(data) {
@@ -124,9 +130,9 @@ service cloud.firestore {
              data.pointCost is number &&
              data.active is bool &&
              data.createdAt is string && data.createdAt.size() <= 64 &&
-             (!data.keys().contains('boundary') || (data.boundary is string && data.boundary.size() <= 512)) &&
-             (!data.keys().contains('requiresApproval') || data.requiresApproval is bool) &&
-             (!data.keys().contains('sortOrder') || data.sortOrder is number);
+             (!data.keys().hasAny(['boundary']) || (data.boundary is string && data.boundary.size() <= 512)) &&
+             (!data.keys().hasAny(['requiresApproval']) || data.requiresApproval is bool) &&
+             (!data.keys().hasAny(['sortOrder']) || data.sortOrder is number);
     }
 
     function isValidRewardRequest(data) {
@@ -152,8 +158,8 @@ service cloud.firestore {
              data.code is string && data.code.size() <= 32 &&
              data.active is bool &&
              data.createdAt is string && data.createdAt.size() <= 64 &&
-             (!data.keys().contains('claimedByUid') || (data.claimedByUid is string && data.claimedByUid.size() <= 128)) &&
-             (!data.keys().contains('claimedAt') || (data.claimedAt is string && data.claimedAt.size() <= 64));
+             (!data.keys().hasAny(['claimedByUid']) || (data.claimedByUid is string && data.claimedByUid.size() <= 128)) &&
+             (!data.keys().hasAny(['claimedAt']) || (data.claimedAt is string && data.claimedAt.size() <= 64));
     }
 
     function isValidLog(data) {
@@ -173,8 +179,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || (resource != null && isParent(resource.data.familyId)));
       allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid && isValidUserMapping(incoming()) && incoming().id == request.auth.uid && (
-        !incoming().keys().contains('inviteId') ||
-        (incoming().keys().contains('inviteId') && 
+        !incoming().keys().hasAny(['inviteId']) ||
+        (incoming().keys().hasAny(['inviteId']) && 
          get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.claimedByUid == request.auth.uid &&
          get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.familyId == incoming().familyId &&
          get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.role == incoming().role &&
@@ -195,35 +201,38 @@ service cloud.firestore {
 
     match /families/{familyId} {
       allow read: if isValidId(familyId) && isMember(familyId);
-      allow create: if isSignedIn() && isValidId(familyId) && isValidFamily(incoming()) && incoming().id == familyId;
+      allow create: if isSignedIn() && isValidId(familyId) && isValidFamily(incoming()) && incoming().id == familyId && 
+                    (!incoming().keys().hasAny(['createdBy']) || incoming().createdBy == request.auth.uid);
       allow update: if isValidId(familyId) && isParent(familyId) && isValidFamily(incoming());
 
       match /users/{memberId} {
         allow read: if isValidId(memberId) && isMember(familyId);
         
         allow create: if isSignedIn() && isValidId(memberId) && isValidUser(incoming()) && (
-          // Case 1: First parent joining a brand-new family (family just created, createdAt matches user createdAt)
+          // Case 1: First parent joining a brand-new family (family just created, createdAt matches user createdAt OR createdBy matches parent user ID)
           (memberId == request.auth.uid && 
            incoming().id == request.auth.uid &&
-           incoming().role == 'parent' && 
-           get(/databases/$(database)/documents/families/$(familyId)).data.createdAt == incoming().createdAt
+           incoming().role == 'parent' && (
+             get(/databases/$(database)/documents/families/$(familyId)).data.createdAt == incoming().createdAt ||
+             (get(/databases/$(database)/documents/families/$(familyId)).data.keys().hasAny(['createdBy']) && 
+              get(/databases/$(database)/documents/families/$(familyId)).data.createdBy == request.auth.uid)
+           )
           ) ||
           // Case 2: Parent creating/adding family member
           isParent(familyId) ||
           // Case 3: Joined via secure invite
           (memberId == request.auth.uid &&
-           incoming().keys().contains('inviteId') &&
+           incoming().keys().hasAny(['inviteId']) &&
            get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.claimedByUid == request.auth.uid &&
            get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.familyId == familyId &&
            get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.role == incoming().role &&
            get(/databases/$(database)/documents/invites/$(incoming().inviteId)).data.active == false)
         );
         
-        allow update: if isValidId(memberId) && (
+        allow update: if isValidId(memberId) && isValidUser(incoming()) && (
           isParent(familyId) || 
           (isSignedIn() && memberId == request.auth.uid && 
-           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'avatar', 'pin', 'age', 'ageGroup']) &&
-           isValidUser(incoming()))
+           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'avatar', 'pin', 'age', 'ageGroup']))
         );
       }
 
