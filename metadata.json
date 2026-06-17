@@ -1,6 +1,6 @@
 {
   "name": "Independence Board",
-  "description": "A clean, modern, encouraging chore, reward, tablet-time, and boundaries system for Izzy and her family group.",
+  "description": "A positive independence and rewards system that helps kids build daily responsibility through clear routines, flexible chores, visual points, badges, and parent-approved rewards.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

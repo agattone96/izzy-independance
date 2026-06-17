@@ -8,7 +8,6 @@ export const SEED_TASKS: Task[] = [
     category: "Self Care",
     description: "Get dressed, brush teeth, make bed, and do morning stretch.",
     pointValue: 1,
-    tabletBonusMinutes: 5,
     dayOfWeek: "All",
     isDaily: true,
     isRequired: true,
@@ -29,7 +28,6 @@ export const SEED_TASKS: Task[] = [
     category: "Responsibility",
     description: "Clear your floor, put clothes away, and tidy your desk area.",
     pointValue: 1,
-    tabletBonusMinutes: 10,
     dayOfWeek: "All",
     isDaily: true,
     isRequired: true,
@@ -49,7 +47,6 @@ export const SEED_TASKS: Task[] = [
     category: "Responsibility",
     description: "Feed the cat, rinse & refill the water bowl, and clean the litter box.",
     pointValue: 1,
-    tabletBonusMinutes: 5,
     dayOfWeek: "All",
     isDaily: true,
     isRequired: true,
@@ -69,14 +66,13 @@ export const SEED_TASKS: Task[] = [
     category: "Growth",
     description: "30 minutes of deep focus activity (reading, coding, practicing an instrument, or creating art).",
     pointValue: 2,
-    tabletBonusMinutes: 10,
     dayOfWeek: "All",
     isDaily: true,
     isRequired: true,
     checklistItems: [
       "Choose focus topic (reading, coding, keyboard practice, or creating art)",
-      "Set an focus timer for 30 minutes",
-      "Work without tablet or phone distractions",
+      "Set a focus timer for 30 minutes",
+      "Work without screens or phone distractions",
       "Write down or tell parent what you achieved today"
     ],
     sortOrder: 4,
@@ -137,11 +133,11 @@ export const SEED_REWARDS: Reward[] = [
 ];
 
 export const BOUNDARY_RULES: BoundaryRule[] = [
-  { id: 'b1', rule: "Adults set tablet limits, schedules, and boundary rules.", category: "Adult Role", icon: "Shield" },
-  { id: 'b2', rule: "No tablet or device time allowed during family meals.", category: "Tablet Time", icon: "Clock" },
-  { id: 'b3', rule: "Tablet must be powered down and returned to the charging shelf before bedtime.", category: "Tablet Time", icon: "Lock" },
-  { id: 'b4', rule: "Daily Cat Care must be fully checked off before requesting bonus rewards or extra tablet time.", category: "Chores & Rewards", icon: "Smile" },
-  { id: 'b5', rule: "No food, plates, or dirty dishes are to be left in the bedroom.", category: "General Care", icon: "Check" },
-  { id: 'b6', rule: "Arguing, whining, or negotiation loops do not change rules or tablet calculations.", category: "Adult Role", icon: "AlertCircle" },
-  { id: 'b7', rule: "Messes, spills, or visual resets must be completed as soon as they happen.", category: "General Care", icon: "Wrench" }
+  { id: 'b1', rule: "Routines help build positive independence and daily responsibility.", category: "Positive Habit", icon: "Shield" },
+  { id: 'b2', rule: "Keep screens away during family dinner to encourage quality connection.", category: "Family Routine", icon: "Clock" },
+  { id: 'b3', rule: "All personal items go back to their proper shelves and spots by end of day.", category: "Family Routine", icon: "Lock" },
+  { id: 'b4', rule: "Primary responsibilities must be fully checked off before requesting points rewards.", category: "Chores & Rewards", icon: "Smile" },
+  { id: 'b5', rule: "Dishes are brought back immediately to the sink or loaded in the dishwasher.", category: "General Tidy", icon: "Check" },
+  { id: 'b6', rule: "Review chore completions together calmly after school or before dinner.", category: "Communication", icon: "Smile" },
+  { id: 'b7', rule: "Spills, messes, or clutter are cleaned up by who made them as a simple habit.", category: "General Tidy", icon: "Wrench" }
 ];

@@ -14,6 +14,7 @@ import { MetricCard } from './MetricCard';
 import { TaskCard } from '../tasks/TaskCard';
 import { RewardCard } from '../rewards/RewardCard';
 import { BadgeCabinet } from '../badges/BadgeCabinet';
+import { ChildGoalRewardSection } from './components/ChildGoalRewardSection';
 
 export const ChildDashboard: React.FC = () => {
   const { 
@@ -26,7 +27,6 @@ export const ChildDashboard: React.FC = () => {
     completeTaskByChild, 
     fixTaskByChild,
     requestRewardByChild,
-    getTabletTimeMetrics,
     getPointsMetrics 
   } = useBoard();
 
@@ -48,7 +48,6 @@ export const ChildDashboard: React.FC = () => {
   const childId = currentUser.id;
 
   // Real-time calculations
-  const tablet = getTabletTimeMetrics(childId);
   const points = getPointsMetrics(childId);
 
   // Dynamic Responsibility Streak Days Tracker (number of consecutive days with task activity)
@@ -214,81 +213,11 @@ export const ChildDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Calculus Metric Node - Points & Tablet clock */}
+      {/* 2. Calculus Metric Node - Points & Streak Indicators */}
       <div className="grid md:grid-cols-12 gap-8" id="child-metrics-grid">
         
-        {/* Tablet Clock block */}
-        <div className="md:col-span-8 cosmic-glass cosmic-glow-border p-8 rounded-[2.5rem] shadow-2xl space-y-6" id="child-tablet-meters">
-          <div className="flex justify-between items-center pb-4 border-b border-white/5">
-            <h3 className="font-black text-white text-lg flex items-center gap-3 font-display tracking-widest uppercase text-xs">
-              <Clock className="w-5 h-5 text-cyan-400 animate-pulse-slow" /> Device Protocol Clock
-            </h3>
-            <span className="bg-cyan-500/10 text-cyan-300 border border-cyan-500/10 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
-              {tablet.capMessage}
-            </span>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6" id="tablet-times-breakdown">
-            <div className="bg-white/5 p-4 rounded-2xl text-center border border-white/5" id="tablet-standard-segment">
-              <span className="text-[10px] text-white/40 font-bold block uppercase tracking-wider">Base Standard Time</span>
-              <span className="font-black text-2xl text-white/90 block mt-1">{tablet.standardTime}m</span>
-              <span className="text-[9px] text-white/30 block mt-0.5">Guaranteed daily limit</span>
-            </div>
-
-            <div className="bg-amber-500/10 p-4 rounded-2xl text-center border border-amber-500/20" id="tablet-bonus-segment">
-              <span className="text-[10px] text-amber-305 font-bold block uppercase tracking-wider">Earned Bonus Time</span>
-              <span className="font-black text-2xl text-amber-300 block mt-1">
-                +{tablet.bonusEarned}m 
-                {tablet.bonusEarned !== tablet.bonusCapped && (
-                  <span className="text-xs text-amber-400 font-bold ml-1">({tablet.bonusCapped}m cap)</span>
-                )}
-              </span>
-              <span className="text-[9px] text-amber-405 block mt-0.5">Max allowed. 30m maximum</span>
-            </div>
-
-            <div className="bg-gradient-to-br from-teal-500/30 to-teal-600/30 text-white p-4 rounded-2xl text-center border border-teal-500/30 shadow-lg relative overflow-hidden" id="tablet-total-segment">
-              <span className="text-[10px] text-teal-100 font-bold block uppercase tracking-wider">Total Device Limit</span>
-              <span className="font-black text-3xl block mt-1 text-teal-300">{tablet.totalTime}m</span>
-              <span className="text-[9px] text-teal-100/70 font-medium block mt-0.5">Active screen range today</span>
-            </div>
-          </div>
-
-          {/* Visual Progress Slider */}
-          <div className="space-y-2 pt-2" id="tablet-slider">
-            <div className="flex justify-between text-[11px] font-bold text-white/40">
-              <span>90m Standard</span>
-              <span>105m Bonus Earned</span>
-              <span>120m Maximum Capped</span>
-            </div>
-            
-            {/* Base block progress bar */}
-            <div className="w-full h-4 bg-white/10 rounded-full relative overflow-hidden shadow-inner border border-white/5">
-              {/* Standard block */}
-              <div 
-                className="h-full bg-gradient-to-r from-teal-500 to-teal-400 absolute left-0 shadow-md" 
-                style={{ width: `${Math.min(100, (tablet.standardTime / 120) * 100)}%` }}
-              />
-              {/* Bonus block */}
-              <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 absolute transition-all duration-300 shadow-md" 
-                style={{ 
-                  left: `${Math.min(100, (tablet.standardTime / 120) * 100)}%`, 
-                  width: `${Math.min(25, (tablet.bonusCapped / 120) * 100)}%` 
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="bg-indigo-500/10 border border-indigo-500/15 p-3.5 rounded-2xl flex gap-2" id="tablet-cap-notice">
-            <Clock className="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" />
-            <p className="text-[11px] text-indigo-200 leading-relaxed font-semibold">
-              {tablet.warningMessage}
-            </p>
-          </div>
-        </div>
-
         {/* Reusable Metric point nodes */}
-        <div className="md:col-span-4 space-y-4" id="child-points-metric-grid">
+        <div className="md:col-span-12 space-y-4" id="child-points-metric-grid">
           <MetricCard
             id="wallet-metric-card"
             title="Reward Bank Wallet"
@@ -343,7 +272,16 @@ export const ChildDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Reward Goal Target Tracker */}
+      <ChildGoalRewardSection
+        id="child-goal-reward-tracker"
+        childId={childId}
+        rewards={rewards}
+        currentPoints={points.rewardBankBalance}
+      />
+
       {/* 3. Navigation Tabs within Child Dashboard */}
+
       <div className="flex border-b border-white/5 gap-10 text-[11px] font-black uppercase tracking-widest" id="child-dash-navigation">
         <button 
           onClick={() => setActiveTab('missions')}
@@ -373,9 +311,10 @@ export const ChildDashboard: React.FC = () => {
               Check off your checklist items daily, then click the blue button to submit.
             </p>
             <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-              Seeded Daily Missions
+              Today's Daily Responsibilities & Chores
             </span>
           </div>
+
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" id="daily-missions-cards">
             {sortedTasks.map((task) => {
@@ -416,7 +355,7 @@ export const ChildDashboard: React.FC = () => {
               {categories.map((c) => (
                 <button
                   key={c.value}
-                  onClick={() => setSelectedRewardCategory(c.value as any)}
+                  onClick={() => setSelectedRewardCategory(c.value as 'all' | 'small' | 'medium' | 'weekly' | 'saved_up')}
                   className={`text-xs px-3 py-1.5 rounded-full font-bold transition border cursor-pointer ${
                     selectedRewardCategory === c.value 
                       ? 'bg-white/20 text-white border-white/15' 

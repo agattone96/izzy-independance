@@ -19,8 +19,8 @@ export const useChildProfileState = () => {
     setEditingChildId(child.id);
     setEditChildName(child.name);
     setEditChildAvatar(child.avatar || '👧');
-    setEditChildAge((child as any).age || '');
-    setEditChildAgeGroup((child as any).ageGroup || 'elementary');
+    setEditChildAge(child.age || '');
+    setEditChildAgeGroup(child.ageGroup || 'elementary');
     setEditChildPin(child.pin || '');
     setSaveProfileMessage(null);
   };
@@ -38,7 +38,6 @@ export const useChildProfileState = () => {
             category: chore.category,
             description: `Auto-generated age-suitable chore for ${group} profiles.`,
             pointValue: chore.pointValue,
-            tabletBonusMinutes: chore.tabletBonusMinutes,
             dayOfWeek: "All",
             isDaily: true,
             isRequired: false,

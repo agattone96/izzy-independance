@@ -31,7 +31,8 @@ import {
   writeBatch 
 } from 'firebase/firestore';
 import { OperationType, handleFirestoreError, handleAuthError } from '../services/firebaseError';
-import { calculateTabletTimeMetrics, calculatePointsMetrics } from '../utils/metrics';
+import { 
+  calculatePointsMetrics } from '../utils/metrics';
 import { validateAndParseCSVTasks, validateAndParseCSVRewards } from '../utils/csvValidator';
 
 interface BoardContextType {
@@ -86,21 +87,13 @@ interface BoardContextType {
   importCSVRewards: (importedRewards: Array<Partial<Reward>>, mode: 'overwrite' | 'update') => Promise<{ importedCount: number; errors: string[] }>;
 
   // Calculus Metrics
-  getTabletTimeMetrics: (childId: string) => {
-    standardTime: number;
-    bonusEarned: number;
-    bonusCapped: number;
-    totalTime: number;
-    capMessage: string;
-    warningMessage: string;
-  };
   getPointsMetrics: (childId: string) => {
     lifetimePoints: number;
     rewardBankBalance: number;
   };
 
   // General Operations
-  updateFamilySettings: (settings: { standardMinutes: number; maxBonusMinutes: number; familyName: string; timezone?: string }) => Promise<void>;
+  updateFamilySettings: (settings: { familyName: string; timezone?: string }) => Promise<void>;
   updateUserProfile: (userId: string, updates: { name?: string; avatar?: string; age?: number; ageGroup?: 'toddler' | 'preschool' | 'elementary' | 'teen'; pin?: string }) => Promise<void>;
   resetAllData: () => void;
   // Caregiver / Visit Mode Actions
@@ -300,7 +293,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setIsAuthReady(true);
           }
         }, (err) => {
-          console.error("Live user doc mapping listener failed: ", err);
+          console.error("Live user doc mapping listener not successful: ", err);
           setIsAuthReady(true);
         });
 
@@ -383,6 +376,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!user) throw new Error("Authentication failed");
       const uid = user.uid;
       const famId = `fam_${Date.now()}`;
+      const nowIso = new Date().toISOString();
 
       // 1. Create family document
       const familyRef = doc(db, 'families', famId);
@@ -390,11 +384,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: famId,
         name: familyName,
         timezone: timezone,
-        createdAt: new Date().toISOString(),
-        tabletSettings: {
-          standardMinutes: 90,
-          maxBonusMinutes: 30
-        },
+        createdAt: nowIso,
         isActiveVisit: false,
         parentInstructions: {
           allergies: "No known food allergies. Only wholesome, high-quality ingredients.",
@@ -408,10 +398,10 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: uid,
         name: parentName,
         role: 'parent',
-        avatar: '👩‍💼',
+        avatar: '👩',
         email,
         familyId: famId,
-        createdAt: new Date().toISOString()
+        createdAt: nowIso
       };
       await setDoc(doc(db, 'families', famId, 'users', uid), parentUser);
 
@@ -617,6 +607,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const uid = user.uid;
       const email = user.email || '';
       const famId = `fam_${Date.now()}`;
+      const nowIso = new Date().toISOString();
 
       // 1. Create family document
       const familyRef = doc(db, 'families', famId);
@@ -624,11 +615,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: famId,
         name: familyName,
         timezone: timezone,
-        createdAt: new Date().toISOString(),
-        tabletSettings: {
-          standardMinutes: 90,
-          maxBonusMinutes: 30
-        },
+        createdAt: nowIso,
         isActiveVisit: false,
         parentInstructions: {
           allergies: "No known food allergies. Only wholesome, high-quality ingredients.",
@@ -642,10 +629,10 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: uid,
         name: parentName,
         role: 'parent',
-        avatar: '👩‍💼',
+        avatar: '👩',
         email,
         familyId: famId,
-        createdAt: new Date().toISOString()
+        createdAt: nowIso
       };
       await setDoc(doc(db, 'families', famId, 'users', uid), parentUser);
 
@@ -748,7 +735,6 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       childName: child.name,
       completedAt: new Date().toISOString(),
       pointsEarned: task.pointValue,
-      tabletBonusEarned: task.tabletBonusMinutes,
       status: 'pending_review',
       checklistState: checklistState || defaultCheckstate
     };
@@ -758,7 +744,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (authenticatedUser.role === 'caregiver') {
         await addLog(authenticatedUser.id, authenticatedUser.name, "task_completed", `Logged visit task "${task.title}" on behalf of ${child.name}. Sent for parent approval.`);
       } else {
-        await addLog(childId, child.name, "task_completed", `Completed task "${task.title}" earning ${task.pointValue} pt & +${task.tabletBonusMinutes} mins bonus`);
+        await addLog(childId, child.name, "task_completed", `Completed task "${task.title}" earning ${task.pointValue} pt`);
       }
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `families/${family.id}/completions`);
@@ -776,9 +762,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       await updateDoc(doc(db, 'families', family.id, 'completions', completionId), {
         status,
-        parentFeedback: feedback || '',
-        // If status is needs_fix, tablet bonus becomes 0 but child's lifetime points remain untouched
-        tabletBonusEarned: status === 'needs_fix' ? 0 : completion.tabletBonusEarned
+        parentFeedback: feedback || ''
       });
 
       await addLog(
@@ -804,13 +788,12 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const parentTask = tasks.find(t => t.id === c.taskId || t.key === c.taskKey);
-    const restoredBonus = parentTask ? parentTask.tabletBonusMinutes : 5;
+    const restoredBonus = 0; // Bonus minutes deprecated
 
     try {
       await updateDoc(doc(db, 'families', family.id, 'completions', completionId), {
         status: 'pending_review',
-        parentFeedback: '',
-        tabletBonusEarned: restoredBonus
+        parentFeedback: ''
       });
 
       await addLog(authenticatedUser.id, authenticatedUser.name, "task_completed", `Fixed Needs-a-fix chore on "${parentTask?.title || c.taskKey}". Flag cleared.`);
@@ -992,7 +975,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { importedCount: validTasks.length, errors: [] };
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `families/${family.id}/tasks`);
-      return { importedCount: 0, errors: ["Server import batch failed"] };
+      return { importedCount: 0, errors: ["Server import batch not successful"] };
     }
   };
 
@@ -1023,31 +1006,23 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { importedCount: validRewards.length, errors: [] };
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `families/${family.id}/rewards`);
-      return { importedCount: 0, errors: ["Server bulk upload failed"] };
+      return { importedCount: 0, errors: ["Server bulk upload not successful"] };
     }
   };
 
   // Calculus Engines
-  const getTabletTimeMetrics = (childId: string) => {
-    return calculateTabletTimeMetrics(childId, family, completions);
-  };
-
   const getPointsMetrics = (childId: string) => {
     return calculatePointsMetrics(childId, completions, rewardRequests);
   };
 
-  const updateFamilySettings = async (settings: { standardMinutes: number; maxBonusMinutes: number; familyName: string; timezone?: string }) => {
+  const updateFamilySettings = async (settings: { familyName: string; timezone?: string }) => {
     if (!family || !authenticatedUser || authenticatedUser.role !== 'parent') return;
     try {
       await updateDoc(doc(db, 'families', family.id), {
         name: settings.familyName,
-        timezone: settings.timezone || family.timezone,
-        tabletSettings: {
-          standardMinutes: settings.standardMinutes,
-          maxBonusMinutes: settings.maxBonusMinutes
-        }
+        timezone: settings.timezone || family.timezone
       });
-      await addLog(authenticatedUser.id, authenticatedUser.name, "settings_updated", `Updated family system settings: Daily Standard set to ${settings.standardMinutes}m, Daily Max Bonus set to ${settings.maxBonusMinutes}m.`);
+      await addLog(authenticatedUser.id, authenticatedUser.name, "settings_updated", `Updated family settings name to: ${settings.familyName}.`);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `families/${family.id}`);
     }
@@ -1167,7 +1142,6 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteReward,
       importCSVTasks,
       importCSVRewards,
-      getTabletTimeMetrics,
       getPointsMetrics,
       updateFamilySettings,
       updateUserProfile,

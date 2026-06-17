@@ -78,7 +78,7 @@ export const CSVImportSection: React.FC = () => {
             </div>
 
             <p className="text-white/50 text-xs mb-4 leading-relaxed">
-              Columns strictly required: <code className="bg-white/5 p-0.5 text-rose-300 font-mono text-[10px] rounded border border-white/5">task_key, title, Category, point_value, tablet_bonus_minutes...</code> Checklist items can be bundled separating texts with vertical pipe (|) symbol.
+              Columns strictly required: <code className="bg-white/5 p-0.5 text-rose-300 font-mono text-[10px] rounded border border-white/5">task_key, title, Category, point_value...</code> Checklist items can be bundled separating texts with vertical pipe (|) symbol.
             </p>
 
             <div className="space-y-4">
@@ -146,7 +146,6 @@ export const CSVImportSection: React.FC = () => {
                           <th className="p-1 px-2 text-left uppercase text-white/40 font-bold">Key</th>
                           <th className="p-1 px-2 text-left uppercase text-white/40 font-bold">Title</th>
                           <th className="p-1 px-2 text-center uppercase text-white/40 font-bold">Points</th>
-                          <th className="p-1 px-2 text-center uppercase text-white/40 font-bold">Bonus</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5 bg-transparent">
@@ -155,7 +154,6 @@ export const CSVImportSection: React.FC = () => {
                             <td className="p-1 px-2 font-mono font-bold text-teal-350">{tp.key}</td>
                             <td className="p-1 px-2 font-medium truncate max-w-[120px]">{tp.title}</td>
                             <td className="p-1 px-2 text-center font-bold text-amber-350">{tp.pointValue} pt</td>
-                            <td className="p-1 px-2 text-center font-bold text-lavender-350">+{tp.tabletBonusMinutes}m</td>
                           </tr>
                         ))}
                       </tbody>

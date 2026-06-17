@@ -35,7 +35,7 @@ export const ForgotPasswordPage: React.FC = () => {
       await sendPasswordReset(email.trim());
       setMessage("A password recovery link has been sent to your email address.");
     } catch (err: any) {
-      setError("We couldn't find an account associated with that email address or the recovery request failed.");
+      setError("We couldn't find an account associated with that email address or the recovery request not successful.");
     } finally {
       setLoading(false);
     }

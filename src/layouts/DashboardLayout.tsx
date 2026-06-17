@@ -228,7 +228,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
       <footer className="bg-white/5 border-t border-white/10 py-6 relative z-10" id="global-footer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-[10px] text-white/30 font-medium space-y-1">
-          <p>Izzy’s Independence Board — Guided Chore & Trust Optimization Engine © 2026.</p>
+          <p>Izzy’s Independence Board — Clear routines. Earned rewards. Calmer family follow-through. © 2026.</p>
         </div>
       </footer>
     </div>

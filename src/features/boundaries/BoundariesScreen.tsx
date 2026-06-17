@@ -30,29 +30,32 @@ export const BoundariesScreen: React.FC = () => {
           💡 Freedom & Responsibility
         </span>
         <h2 className="text-3xl font-black text-white mt-4 tracking-tight">
-          Izzy's Independence Boundaries
+          Independence Habits & Guidelines
         </h2>
         <p className="text-white/60 mt-2 max-w-xl mx-auto text-sm">
-          “Freedom grows when responsibility grows.” These calm guidelines help everyone in the family stay on the same page.
+          “Freedom grows when responsibility grows.” These healthy guidelines help clarify daily follow-through and positive habits.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6" id="boundaries-grid">
-        {boundaryRules.map((rule, idx) => {
+        {boundaryRules.map((rule) => {
           const IconComponent = iconMap[rule.icon] || Shield;
           
           let cardColor = "bg-white/5 border-white/10 hover:border-teal-400/40 text-white";
           let iconBg = "bg-teal-500/15 text-teal-350";
           
-          if (rule.category === 'Tablet Time') {
+          if (rule.category === 'Family Routine' || rule.category === 'Positive Habit') {
             cardColor = "bg-white/5 border-white/10 hover:border-indigo-400/40 text-white";
             iconBg = "bg-indigo-500/15 text-indigo-350";
           } else if (rule.category === 'Adult Role') {
             cardColor = "bg-white/5 border-white/10 hover:border-amber-400/40 text-white";
-            iconBg = "bg-amber-500/15 text-amber-350";
+            iconBg = "bg-amber-500/15 text-amber-305";
           } else if (rule.category === 'Chores & Rewards') {
             cardColor = "bg-white/5 border-white/10 hover:border-rose-400/40 text-white";
-            iconBg = "bg-rose-500/15 text-rose-355";
+            iconBg = "bg-rose-500/15 text-rose-350";
+          } else if (rule.category === 'General Tidy') {
+            cardColor = "bg-white/5 border-white/10 hover:border-emerald-400/40 text-white";
+            iconBg = "bg-emerald-500/15 text-emerald-350";
           }
 
           return (
@@ -82,7 +85,7 @@ export const BoundariesScreen: React.FC = () => {
           ✨ Stronger Habits, More Autonomy!
         </h4>
         <p className="text-teal-200/85 max-w-2xl mx-auto mt-2 text-xs leading-relaxed font-semibold">
-          When the four daily life basics are consistently checked off, it proves to mom and dad to expand trust, unlock opportunities, provide wider ranges of independent decision-making, and bigger weekly reward configurations!
+          When primary daily life basics are consistently checked off, it demonstrates readiness to expand trust, unlock opportunities, provide wider ranges of independent decision-making, and bigger weekly reward options!
         </p>
       </div>
     </div>

@@ -75,7 +75,7 @@ export const ParentChildProgressSection: React.FC = () => {
                     <label className="text-white/70 block">Age-suitability Preset</label>
                     <select
                       value={editChildAgeGroup}
-                      onChange={(e) => setEditChildAgeGroup(e.target.value as any)}
+                      onChange={(e) => setEditChildAgeGroup(e.target.value as 'toddler' | 'preschool' | 'elementary' | 'teen')}
                       className="w-full bg-neutral-900 border border-white/10 p-2.5 rounded-xl text-white font-bold text-xs"
                     >
                       <option value="toddler">Toddler (Age 2-3)</option>
@@ -170,9 +170,9 @@ export const ParentChildProgressSection: React.FC = () => {
                         <span className="text-[10px] bg-white/10 text-white/80 border border-white/5 px-2 py-0.5 rounded-full font-bold">
                           {child.age ? `${child.age} yrs` : 'Age N/A'}
                         </span>
-                        {(child as any).ageGroup && (
+                        {child.ageGroup && (
                           <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/10 px-2 py-0.5 rounded-full font-black uppercase tracking-wide">
-                            {(child as any).ageGroup} preset
+                            {child.ageGroup} preset
                           </span>
                         )}
                       </div>

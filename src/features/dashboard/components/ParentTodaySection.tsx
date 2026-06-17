@@ -7,7 +7,6 @@ export const ParentTodaySection: React.FC = () => {
   const { 
     tasks, 
     reviewTaskByParent, 
-    getTabletTimeMetrics, 
     getPointsMetrics 
   } = useBoard();
 
@@ -41,12 +40,12 @@ export const ParentTodaySection: React.FC = () => {
       <div className="grid lg:grid-cols-12 gap-8">
         
         {/* Pending actions pane */}
-        <div className="lg:col-span-8 space-y-6" id="today-pending-pane">
+        <div className="lg:col-span-12 space-y-6" id="today-pending-pane">
           <div className="border-b border-white/10 pb-3">
             <h3 className="font-extrabold text-white text-base flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-teal-400" /> Pending Child Certifications ({pendingCompletions.length})
             </h3>
-            <p className="text-white/60 text-xs mt-0.5">Review submissions from children; marking "Needs a fix" removes tablet bonuses dynamically but holds points.</p>
+            <p className="text-white/60 text-xs mt-0.5">Review submissions from children; marking "Needs a fix" holds points until corrected, helping build consistent daily responsibility.</p>
           </div>
 
           {pendingCompletions.length === 0 ? (
@@ -77,7 +76,6 @@ export const ParentTodaySection: React.FC = () => {
                       
                       <div className="text-right">
                         <span className="font-extrabold text-teal-400 text-sm block">+{comp.pointsEarned} pt</span>
-                        <span className="font-bold text-indigo-300 text-[10px] block font-mono">+{comp.tabletBonusEarned} min screens</span>
                       </div>
                     </div>
 
@@ -159,49 +157,6 @@ export const ParentTodaySection: React.FC = () => {
               })}
             </div>
           )}
-        </div>
-
-        {/* Live tablet meters today sidebar */}
-        <div className="lg:col-span-4 space-y-6" id="today-tablet-pane">
-          <div className="border-b border-white/10 pb-3">
-            <h3 className="font-extrabold text-white text-base">Device Timers Today</h3>
-          </div>
-
-          <div className="space-y-4">
-            {childrenUsers.map((child) => {
-              const m = getTabletTimeMetrics(child.id);
-              const p = getPointsMetrics(child.id);
-              
-              return (
-                <div key={child.id} id={`sidebar-child-${child.id}`} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 backdrop-blur-md">
-                  <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                    <span className="font-black text-sm text-white">{child.name}</span>
-                    <span className="text-[10px] bg-teal-500/20 text-teal-300 border border-teal-500/10 font-bold px-2.5 py-0.5 rounded-full">
-                      {p.rewardBankBalance} Available Pts
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-white">
-                      <span className="text-[9px] text-white/40 font-bold block uppercase tracking-wider">Tablet Total</span>
-                      <span className="font-black text-white block mt-0.5">{m.totalTime}m</span>
-                    </div>
-                    <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-white">
-                      <span className="text-[9px] text-white/40 font-bold block uppercase tracking-wider">Bonus Earned</span>
-                      <span className="font-black text-indigo-300 block mt-0.5">+{m.bonusEarned}m</span>
-                    </div>
-                  </div>
-
-                  {/* Display warning if bonus capped */}
-                  {m.bonusEarned > m.bonusCapped && (
-                    <div className="text-[10px] text-indigo-200 bg-indigo-500/15 border border-indigo-500/10 p-2.5 rounded-xl italic leading-relaxed">
-                      🌟 Capped at +30m. Remaining work converted solely to points balances!
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </div>
       </div>
     </div>

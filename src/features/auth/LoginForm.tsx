@@ -40,7 +40,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       await loginWithGoogle();
       onSuccess?.();
     } catch (err: any) {
-      setError(err?.message || "Google Sign-in failed. Please try again.");
+      setError(err?.message || "Google Sign-in not successful. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       await sendMagicLink(email.trim());
       setMessage("A magic link has been sent to your email. Check your inbox!");
     } catch (err: any) {
-      setError(err?.message || "Magic link request failed.");
+      setError(err?.message || "Magic link request not successful.");
     } finally {
       setMagicLoading(false);
     }

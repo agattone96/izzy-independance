@@ -21,10 +21,7 @@ export function validateAndParseCSVTasks(
     if (!raw.key) { errors.push(`Row ${lineNo}: missing required field "task_key"`); return; }
     if (!raw.title) { errors.push(`Row ${lineNo}: missing required field "title"`); return; }
     if (raw.pointValue === undefined || isNaN(raw.pointValue)) { errors.push(`Row ${lineNo}: invalid or missing "point_value"`); return; }
-    if (raw.tabletBonusMinutes === undefined || isNaN(raw.tabletBonusMinutes)) { errors.push(`Row ${lineNo}: invalid or missing "tablet_bonus_minutes"`); return; }
     if (raw.pointValue < 0) { errors.push(`Row ${lineNo}: "point_value" cannot be negative`); return; }
-    if (raw.tabletBonusMinutes < 0) { errors.push(`Row ${lineNo}: "tablet_bonus_minutes" cannot be negative`); return; }
-    if (raw.tabletBonusMinutes > 60) { errors.push(`Row ${lineNo}: unsafe tablet bonus minutes (${raw.tabletBonusMinutes} is > 60m threshold)`); return; }
     
     const validDays = ["All", "Weekday", "Weekend", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     if (raw.dayOfWeek && !validDays.includes(raw.dayOfWeek)) {
@@ -43,7 +40,6 @@ export function validateAndParseCSVTasks(
       category: raw.category || 'General',
       description: raw.description || '',
       pointValue: Number(raw.pointValue),
-      tabletBonusMinutes: Number(raw.tabletBonusMinutes),
       dayOfWeek: raw.dayOfWeek || 'All',
       isDaily,
       isRequired,

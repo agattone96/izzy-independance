@@ -38,7 +38,7 @@ export function parseTasksCSVText(text: string): ParsedCSVTasksResult {
   const headers = rows[0].map(h => h.trim().toLowerCase());
   
   // Check if essential headers are present
-  const missingHeaders = ["task_key", "title", "point_value", "tablet_bonus_minutes"].filter(
+  const missingHeaders = ["task_key", "title", "point_value"].filter(
     h => !headers.includes(h)
   );
 
@@ -67,7 +67,6 @@ export function parseTasksCSVText(text: string): ParsedCSVTasksResult {
     const key = record["task_key"];
     const title = record["title"];
     const ptVal = Number(record["point_value"]);
-    const bonusMin = Number(record["tablet_bonus_minutes"]);
     const day = record["day_of_week"] || "All";
 
     // Validate types & bounds
@@ -76,12 +75,6 @@ export function parseTasksCSVText(text: string): ParsedCSVTasksResult {
     
     if (isNaN(ptVal) || ptVal < 0) {
       errorsList.push(`Line ${lineNo}: "point_value" (${record["point_value"]}) must be a zero or positive number`);
-    }
-    
-    if (isNaN(bonusMin) || bonusMin < 0) {
-      errorsList.push(`Line ${lineNo}: "tablet_bonus_minutes" (${record["tablet_bonus_minutes"]}) must be a zero or positive integer`);
-    } else if (bonusMin > 60) {
-      errorsList.push(`Line ${lineNo}: tablet bonus is unsafe! Maximum of 60 minutes allowed per individual task.`);
     }
 
     if (!validDays.includes(day)) {
@@ -108,7 +101,6 @@ export function parseTasksCSVText(text: string): ParsedCSVTasksResult {
       category: record["category"] || "General",
       description: record["description"] || "",
       pointValue: ptVal,
-      tabletBonusMinutes: bonusMin,
       dayOfWeek: day,
       isDaily,
       isRequired,

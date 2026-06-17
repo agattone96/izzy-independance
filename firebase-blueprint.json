@@ -36,13 +36,6 @@
         "name": { "type": "string" },
         "timezone": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
-        "tabletSettings": {
-          "type": "object",
-          "properties": {
-            "standardMinutes": { "type": "number" },
-            "maxBonusMinutes": { "type": "number" }
-          }
-        },
         "isActiveVisit": { "type": "boolean" },
         "parentInstructions": {
           "type": "object",
@@ -66,7 +59,6 @@
         "category": { "type": "string" },
         "description": { "type": "string" },
         "pointValue": { "type": "number" },
-        "tabletBonusMinutes": { "type": "number" },
         "dayOfWeek": { "type": "string" },
         "isDaily": { "type": "boolean" },
         "isRequired": { "type": "boolean" },
@@ -76,7 +68,17 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "isVisitTask": { "type": "boolean" },
         "visitTaskKey": { "type": "string" },
-        "pausedDuringVisit": { "type": "boolean" }
+        "pausedDuringVisit": { "type": "boolean" },
+        "frequency": { "type": "string" },
+        "requiresApproval": { "type": "boolean" },
+        "checklistSteps": { "type": "array", "items": { "type": "string" } },
+        "ageMin": { "type": "number" },
+        "ageMax": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "dueDay": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "isRecurring": { "type": "boolean" },
+        "isAsNeeded": { "type": "boolean" }
       }
     },
     "completion": {
@@ -91,7 +93,6 @@
         "childName": { "type": "string" },
         "completedAt": { "type": "string", "format": "date-time" },
         "pointsEarned": { "type": "number" },
-        "tabletBonusEarned": { "type": "number" },
         "status": { "type": "string", "enum": ["pending_review", "approved", "needs_fix"] },
         "parentFeedback": { "type": "string" },
         "checklistState": { "type": "object" }
@@ -105,11 +106,20 @@
         "id": { "type": "string" },
         "key": { "type": "string" },
         "title": { "type": "string" },
-        "category": { "type": "string", "enum": ["small", "medium", "weekly", "saved_up"] },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
         "pointCost": { "type": "number" },
         "boundary": { "type": "string" },
         "requiresApproval": { "type": "boolean" },
+        "approvalRequired": { "type": "boolean" },
+        "cooldown": { "type": "number" },
+        "availability": { "type": "string" },
+        "budgetLevel": { "type": "string" },
+        "ageMin": { "type": "number" },
+        "ageMax": { "type": "number" },
         "active": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "customRules": { "type": "string" },
         "sortOrder": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" }
       }

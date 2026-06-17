@@ -1,6 +1,9 @@
 # Izzy’s Independence Board 🌟
 
-An encouraging, child-centered chore, reward, tablet-time, and boundary-tracking system designed for 11-year-old Izzy and her family. The app features role-based access control, parent reviews, automatic tablet time calculations (guaranteeing standard limits while capping bonus incentives), and bulk CSV imports.
+**"Clear routines. Earned rewards. Calmer family follow-through."**
+
+A positive independence and rewards system that helps kids build daily responsibility through clear routines, flexible chores, visual points, badges, and parent-approved rewards. It features role-based access control (Parent, Child, Caregiver), parent reviews of milestone completions, non-punitive "Needs a Fix" loops, a progress-oriented child dashboard complete with a target reward goal tracker, and secure CSV import configurations.
+
 
 ---
 
@@ -16,7 +19,7 @@ An encouraging, child-centered chore, reward, tablet-time, and boundary-tracking
 ## 🎨 Visual System & Copywriting Controls
 
 - **Design Tone**: High-contrast modern light theme leveraging **Teal** (growth & fresh milestones), **Navy** (stable structures & status nodes), **Coral/Amber** (encouragement & alert markers), and **Lavender** (boundaries & custom agreements).
-- **Incentive Copywriting**: Avoids punitive, low-esteem labels. Submissions needing refinement are designated as **"Needs a Fix" 🛠️** instead of failures, promoting resilience and learning.
+- **Incentive Copywriting**: Avoids punitive, low-esteem labels. Submissions needing refinement are designated as **"Needs a Fix" 🛠️** instead of being labeled as unsuccessful, promoting resilience and learning.
 
 ---
 
@@ -25,7 +28,6 @@ An encouraging, child-centered chore, reward, tablet-time, and boundary-tracking
 ### 1. `/families/{familyId}` (Documents)
 - `id` (string): Unique identifier.
 - `name` (string): Family title (e.g. `"Izzy's Family"`).
-- `tabletSettings` (map): `standardMinutes` (number), `maxBonusMinutes` (number).
 - `createdAt` (timestamp).
 
 ### 2. `/families/{familyId}/users/{userId}` (Documents)
@@ -42,7 +44,6 @@ An encouraging, child-centered chore, reward, tablet-time, and boundary-tracking
 - `title` (string).
 - `category` (string): E.g., `"Self Care"`, `"Responsibility"`, `"Growth"`.
 - `pointValue` (number).
-- `tabletBonusMinutes` (number).
 - `dayOfWeek` (string): E.g., `"All"`, `"Weekday"`, `"Weekend"`.
 - `isDaily` (boolean).
 - `isRequired` (boolean).
@@ -58,7 +59,6 @@ An encouraging, child-centered chore, reward, tablet-time, and boundary-tracking
 - `childName` (string).
 - `completedAt` (timestamp).
 - `pointsEarned` (number).
-- `tabletBonusEarned` (number).
 - `status` (enum): `'pending_review' | 'approved' | 'needs_fix'`.
 - `parentFeedback` (string, optional).
 - `checklistState` (map of indices -> checked booleans).
@@ -92,10 +92,10 @@ An encouraging, child-centered chore, reward, tablet-time, and boundary-tracking
 ### Tasks CSV Schema
 Columns required:
 ```csv
-task_key,title,category,description,point_value,tablet_bonus_minutes,day_of_week,is_daily,is_required,checklist_items,sort_order,active
+task_key,title,category,description,point_value,day_of_week,is_daily,is_required,checklist_items,sort_order,active
 ```
 - **Checklist parsing**: Comma-separated or vertical-pipe `|` separated items are dissected into string lists automatically.
-- **Constraints**: Rejects negative points, unsafe individual tablet bonus values (> 60m), duplicate keys, and invalid dayOfWeek terms.
+- **Constraints**: Rejects negative points, duplicate keys, and invalid dayOfWeek terms.
 
 ### Rewards CSV Schema
 Columns required:

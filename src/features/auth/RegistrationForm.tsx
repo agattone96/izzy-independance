@@ -41,7 +41,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
       await registerNewFamily(parentName.trim(), email.trim(), password, familyNameInput.trim(), timezone);
       onSuccess?.("Family board created! You are now the administrator.");
     } catch (err: any) {
-      setError(err.message || "Registration failed.");
+      setError(err.message || "Registration not successful.");
     } finally {
       setLoading(false);
     }
@@ -142,7 +142,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
                   await loginWithGoogle();
                   onSuccess?.("Logged in via Google! Directing to set up your family board...");
                 } catch (err: any) {
-                  setError(err?.message || "Google sign-up failed.");
+                  setError(err?.message || "Google sign-up not successful.");
                 } finally {
                   setLoading(false);
                 }

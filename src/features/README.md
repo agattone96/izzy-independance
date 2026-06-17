@@ -9,7 +9,6 @@ Self-contained vertical slices of application logic. Each feature encapsulates i
 - **`invites/`**: Token matching, join links, and confirmation validation.
 - **`tasks/`**: Routine lists, checklist items, and completions.
 - **`rewards/`**: Point balances, reward requests, and redemption ledger.
-- **`tabletTime/`**: Standard duration allowances, bonus calculators, and hard caps.
 - **`csvImport/`**: Verification gateways, template parsing, and database transactions.
 - **`visits/` / `caregivers/`**: At-home visit modes, paused background behaviors, and custom bedtime care directions.
 - **`boundaries/`**: The agreements screen and safety agreements.

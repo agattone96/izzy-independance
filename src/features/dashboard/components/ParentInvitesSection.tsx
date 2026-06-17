@@ -42,7 +42,7 @@ export const ParentInvitesSection: React.FC = () => {
             <label className="text-white/70 block">Target Security Role</label>
             <select 
               value={invRole}
-              onChange={(e) => setInvRole(e.target.value as any)}
+              onChange={(e) => setInvRole(e.target.value as 'parent' | 'child' | 'caregiver')}
               className="w-full bg-neutral-900 border border-white/10 p-2.5 rounded-xl text-white font-bold"
             >
               <option value="child">Child (Accesses standard boards, logs chores)</option>

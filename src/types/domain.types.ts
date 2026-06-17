@@ -14,13 +14,14 @@ export interface User {
   familyId: string;
   createdAt: string;
   inviteId?: string;
+  age?: number;
+  ageGroup?: 'toddler' | 'preschool' | 'elementary' | 'teen';
 }
 
 export interface Family {
   id: string;
   name: string;
   createdAt: string;
-  tabletSettings: TabletSettings;
   isActiveVisit?: boolean; // toggle-able state within family group
   parentInstructions?: {
     allergies: string;
@@ -28,11 +29,6 @@ export interface Family {
     emergencyContacts: string;
     customNotes?: string;
   };
-}
-
-export interface TabletSettings {
-  standardMinutes: number; // default 90
-  maxBonusMinutes: number; // default 30
 }
 
 export interface ChecklistItem {
@@ -48,7 +44,6 @@ export interface Task {
   category: string;
   description: string;
   pointValue: number;
-  tabletBonusMinutes: number;
   dayOfWeek: string; // "Monday", ..., "All", "Weekday", etc.
   isDaily: boolean;
   isRequired: boolean;
@@ -59,6 +54,18 @@ export interface Task {
   isVisitTask?: boolean; // separate category of task for visits
   visitTaskKey?: string; // key for specific csv matching
   pausedDuringVisit?: boolean; // masked when active visit is true to prevent streak impact
+
+  // Expanded fields for Daily Responsibilities & Flexible Chores
+  frequency?: string; // e.g. "daily", "weekly"
+  requiresApproval?: boolean;
+  checklistSteps?: string[];
+  ageMin?: number;
+  ageMax?: number;
+  isActive?: boolean;
+  dueDay?: string; // e.g. "Monday", "Friday"
+  dueDate?: string; // iso string or Date string
+  isRecurring?: boolean;
+  isAsNeeded?: boolean;
 }
 
 export interface TaskCompletion {
@@ -69,7 +76,6 @@ export interface TaskCompletion {
   childName: string;
   completedAt: string; // timestamp
   pointsEarned: number;
-  tabletBonusEarned: number;
   status: 'pending_review' | 'approved' | 'needs_fix';
   parentFeedback?: string;
   checklistState: { [itemIndex: number]: boolean }; // tracks checking sub-items
@@ -79,11 +85,20 @@ export interface Reward {
   id: string;
   key: string;
   title: string;
-  category: 'small' | 'medium' | 'weekly' | 'saved_up';
+  description?: string;
+  category: string; // 'small' | 'medium' | 'weekly' | 'saved_up' | 'custom'
   pointCost: number;
-  boundary: string; // description of rules or when it can be used
+  boundary?: string; // description of rules or when it can be used
   requiresApproval: boolean;
+  approvalRequired?: boolean; // alias for consistency
+  cooldown?: number; // cooldown in hours, e.g. 24
+  availability?: string; // availability description
+  budgetLevel?: string; // low / medium / high
+  ageMin?: number;
+  ageMax?: number;
   active: boolean;
+  isActive?: boolean; // alias for consistency
+  customRules?: string;
   sortOrder: number;
   createdAt: string;
 }
@@ -134,6 +149,6 @@ export interface HistoryLog {
 export interface BoundaryRule {
   id: string;
   rule: string;
-  category: 'Adult Role' | 'Tablet Time' | 'Chores & Rewards' | 'General Care';
+  category: 'Adult Role' | 'Family Routine' | 'Chores & Rewards' | 'General Tidy' | 'Positive Habit' | 'Communication';
   icon: string;
 }

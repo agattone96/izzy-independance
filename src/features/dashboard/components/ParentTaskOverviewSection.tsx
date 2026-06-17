@@ -14,7 +14,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
   const [taskCategory, setTaskCategory] = useState('Responsibility');
   const [taskDesc, setTaskDesc] = useState('');
   const [taskPts, setTaskPts] = useState(1);
-  const [taskBonus, setTaskBonus] = useState(5);
   const [taskDay, setTaskDay] = useState('All');
   const [taskChecklist, setTaskChecklist] = useState('');
   const [taskFormError, setTaskFormError] = useState('');
@@ -35,7 +34,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
     const normalizedKey = trimmedKey.toLowerCase().replace(/\s+/g, '_');
 
     const ptsNum = Number(taskPts);
-    const bonusNum = Number(taskBonus);
 
     // Block saving if conditions are met
     if (!normalizedKey) {
@@ -60,16 +58,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
       return;
     }
 
-    if (isNaN(bonusNum) || bonusNum < 0) {
-      setTaskFormError("Device minutes must be 0 or greater.");
-      return;
-    }
-
-    if (bonusNum > 60) {
-      setTaskFormError("Device minutes cannot exceed 60.");
-      return;
-    }
-
     if (editingTask) {
       updateTask(editingTask.id, {
         key: normalizedKey,
@@ -77,7 +65,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
         category: trimmedCategory,
         description: trimmedDesc,
         pointValue: ptsNum,
-        tabletBonusMinutes: bonusNum,
         dayOfWeek: trimmedDay,
         checklistItems: items,
       });
@@ -89,7 +76,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
         category: trimmedCategory,
         description: trimmedDesc,
         pointValue: ptsNum,
-        tabletBonusMinutes: bonusNum,
         dayOfWeek: trimmedDay,
         active: true,
         sortOrder: tasks.length + 1,
@@ -103,7 +89,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
     setTaskCategory('Responsibility');
     setTaskDesc('');
     setTaskPts(1);
-    setTaskBonus(5);
     setTaskDay('All');
     setTaskChecklist('');
     setTaskFormError('');
@@ -117,7 +102,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
     setTaskCategory(task.category);
     setTaskDesc(task.description);
     setTaskPts(task.pointValue);
-    setTaskBonus(task.tabletBonusMinutes);
     setTaskDay(task.dayOfWeek);
     setTaskChecklist(task.checklistItems.join('\n'));
   };
@@ -129,7 +113,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
     setTaskCategory('Responsibility');
     setTaskDesc('');
     setTaskPts(1);
-    setTaskBonus(5);
     setTaskDay('All');
     setTaskChecklist('');
     setTaskFormError('');
@@ -183,18 +166,6 @@ export const ParentTaskOverviewSection: React.FC = () => {
                 className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl font-mono text-white"
               />
             </div>
-            
-            <div className="space-y-1">
-              <label className="text-white/70 block">Device Mins</label>
-              <input 
-                type="number" 
-                required
-                min={0}
-                value={taskBonus}
-                onChange={(e) => setTaskBonus(Number(e.target.value))}
-                className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl font-mono text-white"
-              />
-            </div>
           </div>
 
           <div className="space-y-1">
@@ -213,7 +184,7 @@ export const ParentTaskOverviewSection: React.FC = () => {
             <label className="text-white/70 block">Brief Chore Instruction Description</label>
             <input 
               type="text" 
-              placeholder="Do this before taking out tablet devices."
+              placeholder="e.g. Fold clothes and put them neatly in the drawer."
               value={taskDesc}
               onChange={(e) => setTaskDesc(e.target.value)}
               className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl text-white placeholder-white/20"
