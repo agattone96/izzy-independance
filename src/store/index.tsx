@@ -96,6 +96,7 @@ interface BoardContextType {
   updateFamilySettings: (settings: { familyName: string; timezone?: string }) => Promise<void>;
   updateUserProfile: (userId: string, updates: { name?: string; avatar?: string; age?: number; ageGroup?: 'toddler' | 'preschool' | 'elementary' | 'teen'; pin?: string }) => Promise<void>;
   resetAllData: () => void;
+  leaveFamilyBoard: () => Promise<void>;
   // Caregiver / Visit Mode Actions
   toggleVisitMode: () => Promise<void>;
   updateParentInstructions: (instructions: { allergies: string; bedtime: string; emergencyContacts: string; customNotes?: string }) => Promise<void>;
@@ -1095,6 +1096,53 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const leaveFamilyBoard = async () => {
+    if (!authenticatedUser || !family) {
+      throw new Error("No authenticated session or active family board to leave.");
+    }
+
+    const uid = authenticatedUser.id;
+    const famId = family.id;
+
+    if (authenticatedUser.role === 'parent') {
+      const parentCount = users.filter(u => u.role === 'parent').length;
+      if (parentCount <= 1) {
+        throw new Error("You are the last parent on this board. You cannot leave without inviting or transferring ownership to another parent first.");
+      }
+    }
+
+    try {
+      const logId = `log_${Date.now()}`;
+      await setDoc(doc(db, 'families', famId, 'logs', logId), {
+        id: logId,
+        familyId: famId,
+        userId: uid,
+        userName: authenticatedUser.name,
+        actionType: 'settings_updated',
+        description: `${authenticatedUser.name} has left the family board.`,
+        timestamp: new Date().toISOString()
+      });
+
+      await deleteDoc(doc(db, 'families', famId, 'users', uid));
+      await deleteDoc(doc(db, 'users', uid));
+
+      setAuthenticatedUser(null);
+      setCurrentUser(null);
+      setFamily(null);
+      setUsers([]);
+      setTasks([]);
+      setCompletions([]);
+      setRewards([]);
+      setRewardRequests([]);
+      setInvites([]);
+      setLogs([]);
+
+      window.location.href = '/';
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `families/${famId}/users/${uid}`);
+    }
+  };
+
   const resetAllData = () => {
     signOut(auth).then(() => {
       window.location.reload();
@@ -1148,6 +1196,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateFamilySettings,
       updateUserProfile,
       resetAllData,
+      leaveFamilyBoard,
       toggleVisitMode,
       updateParentInstructions
     }}>

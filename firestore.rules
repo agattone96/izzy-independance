@@ -30,19 +30,41 @@ service cloud.firestore {
     }
 
     function isMember(familyId) {
-      return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == familyId)
+      );
     }
 
     function isParent(familyId) {
-      return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && getUserRole(familyId, request.auth.uid) == 'parent';
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && 
+         getUserRole(familyId, request.auth.uid) == 'parent') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == familyId && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent')
+      );
     }
 
     function isChild(familyId) {
-      return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && getUserRole(familyId, request.auth.uid) == 'child';
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && 
+         getUserRole(familyId, request.auth.uid) == 'child') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == familyId && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'child')
+      );
     }
 
     function isCaregiver(familyId) {
-       return isSignedIn() && exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && getUserRole(familyId, request.auth.uid) == 'caregiver';
+       return isSignedIn() && (
+         (exists(/databases/$(database)/documents/families/$(familyId)/users/$(request.auth.uid)) && 
+          getUserRole(familyId, request.auth.uid) == 'caregiver') ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == familyId && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'caregiver')
+       );
     }
 
     // --- Entity Validations ---
@@ -197,6 +219,7 @@ service cloud.firestore {
          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'familyId']) &&
          isValidUserMapping(incoming()))
       );
+      allow delete: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || (resource != null && isParent(resource.data.familyId)));
     }
 
     match /families/{familyId} {
@@ -206,7 +229,8 @@ service cloud.firestore {
       allow update: if isValidId(familyId) && isParent(familyId) && isValidFamily(incoming());
 
       match /users/{memberId} {
-        allow read: if isValidId(memberId) && isMember(familyId);
+        allow get: if isValidId(memberId) && isMember(familyId);
+        allow list: if isMember(familyId);
         
         allow create: if isSignedIn() && isValidId(memberId) && isValidUser(incoming()) && (
           // Case 1: First parent joining a brand-new family (family just created, createdAt matches user createdAt OR createdBy matches parent user ID)
@@ -234,16 +258,19 @@ service cloud.firestore {
           (isSignedIn() && memberId == request.auth.uid && 
            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'avatar', 'pin', 'age', 'ageGroup']))
         );
+        allow delete: if isValidId(memberId) && (isParent(familyId) || (isSignedIn() && memberId == request.auth.uid));
       }
 
       match /tasks/{taskId} {
-        allow read: if isValidId(taskId) && isMember(familyId);
+        allow get: if isValidId(taskId) && isMember(familyId);
+        allow list: if isMember(familyId);
         allow create, update: if isValidId(taskId) && isParent(familyId) && isValidTask(incoming());
         allow delete: if isValidId(taskId) && isParent(familyId);
       }
 
       match /completions/{completionId} {
-        allow read: if isValidId(completionId) && isMember(familyId);
+        allow get: if isValidId(completionId) && isMember(familyId);
+        allow list: if isMember(familyId);
         
         allow create: if isValidId(completionId) && isMember(familyId) && 
                        isValidCompletion(incoming()) && (
@@ -273,13 +300,15 @@ service cloud.firestore {
       }
 
       match /rewards/{rewardId} {
-        allow read: if isValidId(rewardId) && isMember(familyId);
+        allow get: if isValidId(rewardId) && isMember(familyId);
+        allow list: if isMember(familyId);
         allow create, update: if isValidId(rewardId) && isParent(familyId) && isValidReward(incoming());
         allow delete: if isValidId(rewardId) && isParent(familyId);
       }
 
       match /rewardRequests/{requestId} {
-        allow read: if isValidId(requestId) && isMember(familyId);
+        allow get: if isValidId(requestId) && isMember(familyId);
+        allow list: if isMember(familyId);
         
         allow create: if isValidId(requestId) && isMember(familyId) && 
                        isValidRewardRequest(incoming()) && (
@@ -304,7 +333,8 @@ service cloud.firestore {
       }
 
       match /logs/{logId} {
-        allow read: if isValidId(logId) && isMember(familyId);
+        allow get: if isValidId(logId) && isMember(familyId);
+        allow list: if isMember(familyId);
         allow create: if isValidId(logId) && isMember(familyId) && isValidLog(incoming());
       }
     }

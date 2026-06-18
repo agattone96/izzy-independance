@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 import { useBoard } from '../../store';
-import { CSVImportSection } from '../csvImport/CSVImportSection';
 
 import { ParentDashboardSummary } from './components/ParentDashboardSummary';
 import { ParentTodaySection } from './components/ParentTodaySection';
 import { ParentChildProgressSection } from './components/ParentChildProgressSection';
 import { ParentTaskOverviewSection } from './components/ParentTaskOverviewSection';
 import { ParentRewardOverviewSection } from './components/ParentRewardOverviewSection';
-import { ParentInvitesSection } from './components/ParentInvitesSection';
 import { ParentHistorySection } from './components/ParentHistorySection';
 import { ParentSettingsSection } from './components/ParentSettingsSection';
 import { ParentOnboardingSection } from './components/ParentOnboardingSection';
@@ -16,8 +15,18 @@ import { ParentOnboardingSection } from './components/ParentOnboardingSection';
 export const ParentDashboard: React.FC = () => {
   const board = useBoard();
   const { currentUser, family } = board;
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'today' | 'children' | 'tasks' | 'rewards' | 'csv' | 'invites' | 'history' | 'settings'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'children' | 'tasks' | 'rewards' | 'history' | 'settings'>('today');
+
+  // Sync active tab with route queries e.g. ?tab=settings
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['today', 'children', 'tasks', 'rewards', 'history', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam as any);
+    }
+  }, [location]);
 
   // Verify permissions of master role gateway
   if (!currentUser || currentUser.role !== 'parent') {
@@ -43,7 +52,7 @@ export const ParentDashboard: React.FC = () => {
 
       {/* Dynamic Tab customizer layout */}
       <div className="flex flex-wrap gap-2.5 bg-white/5 p-2 rounded-2xl border border-white/5 shadow-inner" id="parent-tabs-navigation">
-        {(['today', 'children', 'tasks', 'rewards', 'csv', 'invites', 'history', 'settings'] as const).map((tab) => (
+        {(['today', 'children', 'tasks', 'rewards', 'history', 'settings'] as const).map((tab) => (
           <button
             key={tab}
             id={`tab-btn-${tab}`}
@@ -54,7 +63,7 @@ export const ParentDashboard: React.FC = () => {
                 : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
             }`}
           >
-            {tab === 'csv' ? 'CSV Import' : tab}
+            {tab}
           </button>
         ))}
       </div>
@@ -64,8 +73,6 @@ export const ParentDashboard: React.FC = () => {
       {activeTab === 'children' && <ParentChildProgressSection />}
       {activeTab === 'tasks' && <ParentTaskOverviewSection />}
       {activeTab === 'rewards' && <ParentRewardOverviewSection />}
-      {activeTab === 'csv' && <CSVImportSection />}
-      {activeTab === 'invites' && <ParentInvitesSection />}
       {activeTab === 'history' && <ParentHistorySection />}
       {activeTab === 'settings' && <ParentSettingsSection />}
 

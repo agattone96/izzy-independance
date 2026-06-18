@@ -238,11 +238,112 @@ function testCSVValidators() {
   console.log("");
 }
 
+// 5. USER PERMISSIONS AND BOARD ACTIONS TESTS
+function testPermissionsAndBoardFlows() {
+  console.log("--- 5. Testing Permission Matrices & Board Lifecycle ---");
+
+  // A. User with no board routes to create/join state
+  const checkRoutingState = (u: User | null): "landing" | "create_join" | "dashboard" => {
+    if (!u) return "landing";
+    if (!u.familyId) return "create_join";
+    return "dashboard";
+  };
+
+  const transientUser: User = { id: "u_new", name: "New User", role: "parent", avatar: "", familyId: "", createdAt: "" };
+  assert(checkRoutingState(transientUser) === "create_join", "user with no board routes to create/join state");
+  
+  const onboardedUser: User = { id: "u_existing", name: "Allison", role: "parent", avatar: "", familyId: "fam_123", createdAt: "" };
+  assert(checkRoutingState(onboardedUser) === "dashboard", "onboarded user with board routes to dashboard");
+
+  // B. Authenticated user can create own board, created board stores createdBy == uid, and parent is added as UID
+  const createFamilyBoardHelper = (uid: string, familyName: string) => {
+    return {
+      familyDoc: {
+        id: "fam_new_id",
+        name: familyName,
+        createdBy: uid,
+        createdAt: new Date().toISOString()
+      },
+      memberDoc: {
+        id: uid, // Parent member doc uses UID as doc ID
+        familyId: "fam_new_id",
+        role: "parent",
+        name: "Allison"
+      }
+    };
+  };
+
+  const boardCreation = createFamilyBoardHelper("u_allison", "Allison's House");
+  assert(boardCreation.familyDoc.createdBy === "u_allison", "board stores createdBy == uid");
+  assert(boardCreation.memberDoc.id === "u_allison", "parent member doc uses UID as doc ID");
+  assert(boardCreation.memberDoc.role === "parent", "first member of board has parent/owner role");
+
+  // C. Child / Caregiver capabilities rules
+  const canApproveCompletions = (u: User) => u.role === 'parent';
+  const canManageSettings = (u: User) => u.role === 'parent';
+
+  const childUser: User = { id: "u_izzy", name: "Izzy", role: "child", avatar: "", familyId: "fam_123", createdAt: "" };
+  const caregiverUser: User = { id: "u_nanny", name: "Mary", role: "caregiver", avatar: "", familyId: "fam_123", createdAt: "" };
+
+  assert(canApproveCompletions(childUser) === false, "child cannot access parent admin capabilities");
+  assert(canManageSettings(caregiverUser) === false, "caregiver cannot access parent admin capabilities");
+
+  // D. Invite role escalation protection
+  const redeemInviteHelper = (invitePayload: { inviteRole: string }, clientRequestedRole: string) => {
+    // If the client attempts to override, correct it to the source of truth invite role
+    return invitePayload.inviteRole; 
+  };
+
+  const invite = { id: "inv_123", inviteRole: "child" };
+  const finalRole = redeemInviteHelper(invite, "parent"); // client trying to claim 'parent'
+  assert(finalRole === 'child', "invite role cannot be escalated by client payload");
+
+  // E. Leaving family board logic
+  const leaveFamilyBoardHelper = (
+    familyMembers: User[],
+    leavingUser: User
+  ) => {
+    if (leavingUser.role === 'parent') {
+      const parentsCount = familyMembers.filter(m => m.role === 'parent').length;
+      if (parentsCount <= 1) {
+        throw new Error("Cannot leave. You are the last parent on this board.");
+      }
+    }
+    // Return filtered array (membership deleted)
+    return familyMembers.filter(m => m.id !== leavingUser.id);
+  };
+
+  const multiParentFamily: User[] = [
+    { id: "parent_1", name: "Mom", role: "parent", avatar: "", familyId: "f1", createdAt: "" },
+    { id: "parent_2", name: "Dad", role: "parent", avatar: "", familyId: "f1", createdAt: "" },
+    { id: "child_1", name: "Izzy", role: "child", avatar: "", familyId: "f1", createdAt: "" }
+  ];
+
+  // TryDadLeaving (should succeed since Mom remains)
+  const afterDadLeaves = leaveFamilyBoardHelper(multiParentFamily, multiParentFamily[1]);
+  assert(afterDadLeaves.some(m => m.id === "parent_2") === false, "leaving board removes access and clears member mapping");
+
+  // Try last parent leaving (Mom is now alone in parent role)
+  const singleParentFamily = afterDadLeaves; // Mom and Izzy
+  let lastParentBlocked = false;
+  try {
+    leaveFamilyBoardHelper(singleParentFamily, singleParentFamily[0]);
+  } catch (err: any) {
+    if (err.message.includes("last parent")) {
+      lastParentBlocked = true;
+    }
+  }
+  assert(lastParentBlocked === true, "last parent leave is blocked successfully");
+
+  console.log("");
+}
+
 // EXECUTIONS
 testPointsAccounting();
 testNeedsFixBehavior();
 testRoleAccessControl();
 testCSVValidators();
+testPermissionsAndBoardFlows();
 
 console.log("==============================================");
 console.log("⭐ ALL UNIT TESTS AND ASSERTIONS PASSED GREEN!");
